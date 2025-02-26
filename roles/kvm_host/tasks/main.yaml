@@ -1,0 +1,20 @@
+---
+- name: Install KVM apt packages
+  ansible.builtin.apt:
+    name: "{{ item}}"
+    state: present 
+  loop:
+    - qemu-kvm 
+    - libvirt-clients 
+    - libvirt-daemon-system 
+    - bridge-utils 
+    - libguestfs-tools 
+    - genisoimage 
+    - virtinst 
+    - libosinfo-bin
+
+- name: add {{ ansible_user }} to libvert and kvm groups
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: libvert,libvirt-qemu
+    append: yes
