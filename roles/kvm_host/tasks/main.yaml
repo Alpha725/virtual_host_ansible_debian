@@ -16,5 +16,64 @@
 - name: add {{ ansible_user }} to libvert and kvm groups
   ansible.builtin.user:
     name: "{{ ansible_user }}"
-    groups: libvert,libvirt-qemu
+    groups: libvirt,libvirt-qemu
     append: yes
+
+# yes. This is very complicated as I wanted to be able to rerun the playbook over an exisiting host.
+
+- name: Check if 'default' pool exists
+  command: virsh pool-dumpxml default
+  register: default_pool_exists
+  ignore_errors: true
+  failed_when: false
+
+- name: Destroy 'default' pool if it exists
+  command: virsh pool-destroy default
+  when: default_pool_exists.rc == 0
+
+- name: Undefine 'default' pool if it exists
+  command: virsh pool-undefine default
+  when: default_pool_exists.rc == 0
+
+- name: Get list of existing storage pools
+  command: virsh pool-list --name
+  register: existing_pools
+
+- name: create storage pools 
+  when: "item.pool_name not in existing_pools.stdout"
+  block:
+    - name: Create storage pool directories
+      ansible.builtin.file:
+        path: "{{ item.pool_path }}"
+        state: directory 
+        owner: "{{ ansible_user }}" 
+        group: "{{ ansible_user }}" 
+        mode: '0755'
+      loop: "{{ storage_pools }}"
+
+    - name: Create storage pool xml
+      ansible.builtin.template: 
+        src: "{{ role_path }}/templates/pool.xml.j2"
+        dest: "/tmp/{{ item.pool_name }}_pool.xml"
+      loop: "{{ storage_pools }}"
+
+    - name: Define storage pool
+      ansible.builtin.command: virsh pool-define "/tmp/{{ item.pool_name }}_pool.xml"
+      loop: "{{ storage_pools }}"
+
+    - name: Start storage pool
+      ansible.builtin.command: virsh pool-start "{{ item.pool_name }}"
+      loop: "{{ storage_pools }}"
+
+    - name: Autostart storage pool
+      ansible.builtin.command: virsh pool-autostart "{{ item.pool_name }}"
+      loop: "{{ storage_pools }}"
+
+    - name: Clean up temporary XML files
+      ansible.builtin.file:
+        path: "/tmp/{{ item.pool_name }}_pool.xml"
+        state: absent
+      loop: "{{ storage_pools }}"
+
+
+

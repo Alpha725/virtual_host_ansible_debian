@@ -2,13 +2,7 @@
   become: yes
   tasks:
   - include_role:
-      name: set_timezone
+      name: patch 
 
   - include_role:
-      name: setup_dwm_debian
-
-  - name: reboot
-    ansible.builtin.reboot:
-
-  - include_role:
-      name: os_customisation
+      name: kvm_host 
