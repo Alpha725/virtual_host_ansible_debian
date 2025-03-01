@@ -12,7 +12,7 @@ You will also need to setup an ssh key auth to the host. I am not explaining how
 
 You will then need to update the `hosts.yaml` ansible_user to your `${username}` and then the ip address of the host/hosts address.
 
-If you want to change or customise your local storage pool, update the following: `roles/kvm_host/vars/main.yaml`
+If you want to change or customise your local storage pool, update the following var: storage_pools
 
 Once you have done all the above run the following command:
 ```bash

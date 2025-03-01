@@ -6,3 +6,6 @@ all:
       vars:
         ansible_user: alex 
         timezone: Australia/Sydney
+        storage_pools:
+          - { pool_name: "isos", pool_path: "/isos" }
+          - { pool_name: "vms", pool_path: "/vms" }
